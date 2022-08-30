@@ -14,6 +14,8 @@ int reset = reset1;
 int clr   = clr1;
 int ldac  = ldac1;
 int sync  = sync1;
+
+const bool plotPIDValues = true;
  
 #define AD5791_NOP 0 // No operation (NOP).
 #define AD5791_REG_DAC 1 // DAC register.
@@ -200,6 +202,16 @@ class PID{
     }
     void setD(float d){
       this->D = d;
+    }
+
+    float getP(){
+      return this->P;
+    }
+    float getI(){
+      return this->I;
+    }
+    float getD(){
+      return this->D;
     }
     
 
@@ -609,7 +621,21 @@ void loop()
       Serial.print(",");
       Serial.print(Refl);   
       Serial.print(",");   
-      Serial.println(error);    
+      Serial.print(error); 
+
+      if(plotPIDValues){
+        Serial.print(",");
+
+        Serial.print(DefaultPid.getP());
+        Serial.print(",");
+
+        Serial.print(DefaultPid.getI());
+        Serial.print(",");
+
+        Serial.print(DefaultPid.getD());
+        Serial.print(",");
+      } 
+      Serial.println(); 
       print_index = 0;
     }
   }
