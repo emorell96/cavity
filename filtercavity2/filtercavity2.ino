@@ -213,6 +213,10 @@ class PID{
     float getD(){
       return this->D;
     }
+
+    void resetSum(){
+        this->errorSum = 0;
+      }
     
 
     PID(float P, float I, float D, float setPoint){
@@ -256,7 +260,7 @@ void flagpost(){
 
 //For sinewaves
 const int freq = 3000; //freq of sinewave in Hertz 
-float ampl =0.005;//Pk-Pk amplitude of sinewave in Volt 
+float ampl =0.01;//Pk-Pk amplitude of sinewave in Volt 
 //Scaling is a bit off. Accurate for 0.5-2.0V, 0.025 will give 40mV
 const int sinetablesize = (samplefreq -(samplefreq%freq))/freq;
 static int sinetable[36][sinetablesize]={};
@@ -292,9 +296,9 @@ float DAC2_offset = 10;//find the proper voltage by delta source
 //140 V on membrane piezo params: minimal I=60n
 
 
-const float P = 0.1;   //0.5
-const float I = 2;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
-const float D = 0.05; //0.15
+const float P = 0.0;   //0.5
+const float I = 0.0;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
+const float D = 0.0; //0.15
 
 
 
@@ -395,7 +399,7 @@ void setup()
  
   
   Serial.println("initialized");
-  delay(10000);
+  delay(1000);
 }
 
 int engage = 0; //switch involved in tranfer between scan and feedback
@@ -449,7 +453,29 @@ void loop()
   {
     incomingByte = Serial.read();  // will not be -1
     //Serial.println(incomingByte);   //  l=108; s=115;  z=122
+    if(incomingByte == 80) // enter "P" in the serial port followed by a float value.
+    {
+        // try to read the P value from the serial
+        float p = Serial.parseFloat();
+        DefaultPid.setP(p);
+    }
+  
+    if(incomingByte == 73) // enter "I" in the serial port followed by a float value.
+    {
+        // try to read the P value from the serial
+        float i = Serial.parseFloat();
+        DefaultPid.setI(i);
+    }
+  
+    if(incomingByte == 68) // enter "D" in the serial port followed by a float value.
+    {
+        // try to read the P value from the serial
+        float d = Serial.parseFloat();
+        DefaultPid.setD(d);
+    }
   }
+  
+  
   if (flag)
   {
     flag = false;
@@ -457,7 +483,7 @@ void loop()
     if (volt_out_DAC1 == -100)
       volt_out_DAC1 = volt_limit_down + 1;      
     Refl = analogRead(A8)*50;
-    error = -LPF.main(sinetable[phi][r]*Refl)/25.0 * 20;   
+    error = -LPF.main(sinetable[phi][r]*Refl)/50.0;   
     //error = 2 * Refl;//14000-27000  
     //error = 2 * lpf2_1.main(Refl);//14000-27000  
 
@@ -481,7 +507,8 @@ void loop()
             dvolt_DAC1 = abs(dvolt_DAC1);
             volt_out_DAC1 = volt_out_DAC1 + dvolt_DAC1;
         }   
-        errorsum = 0;    
+        errorsum = 0; 
+        DefaultPid.resetSum();   
         DAC1_finished = false;
     }
 ///////////////////////////////////////////////////////////////  
@@ -555,27 +582,6 @@ void loop()
           }               
     }
 ///////////////////////////////////////////////////////////////
-    if(incomingByte == 80 && DAC1_finished) // enter "P" in the serial port followed by a float value.
-    {
-        // try to read the P value from the serial
-        float p = Serial.parseFloat();
-        DefaultPid.setP(p);
-    }
-
-    if(incomingByte == 73 && DAC1_finished) // enter "I" in the serial port followed by a float value.
-    {
-        // try to read the P value from the serial
-        float i = Serial.parseFloat();
-        DefaultPid.setI(i);
-    }
-
-    if(incomingByte == 68 && DAC1_finished) // enter "D" in the serial port followed by a float value.
-    {
-        // try to read the P value from the serial
-        float d = Serial.parseFloat();
-        DefaultPid.setD(d);
-    }
-
     if (incomingByte == 108 && DAC1_finished) // lock, the byte values come from the ASCII table: https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
     {      
       engage = 1;
@@ -625,14 +631,15 @@ void loop()
 
       if(plotPIDValues){
         Serial.print(",");
-
-        Serial.print(DefaultPid.getP());
+        float scale = 1000;
+        Serial.print("P:");
+        Serial.print(scale*DefaultPid.getP()+scale);
         Serial.print(",");
-
-        Serial.print(DefaultPid.getI());
+        Serial.print("I:");
+        Serial.print(scale*DefaultPid.getI());
         Serial.print(",");
-
-        Serial.print(DefaultPid.getD());
+        Serial.print("D:");
+        Serial.print(scale*DefaultPid.getD()-scale);
       } 
       Serial.println(); 
       print_index = 0;
