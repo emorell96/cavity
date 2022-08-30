@@ -225,7 +225,7 @@ class PID{
 
 
     // Calculates the correction of the PID from the given error.    
-    float CalculateError(float error){
+    float CalculateCorrection(float error){
         this->errorSum = this->errorSum + (error - this->setPoint)/100000; //Scaling the integral
         if (this->I*this->errorSum > 400000) //Checking if integral feedback is not too large
           this->errorSum = 400000/this->I;
@@ -607,7 +607,7 @@ void loop()
   //              }
             if(state_flag == 0)// PID
             {       
-              C = DefaultPid.CalculateError(error);
+              C = DefaultPid.CalculateCorrection(error);
             }        
           }
 
