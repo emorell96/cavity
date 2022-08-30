@@ -633,7 +633,6 @@ void loop()
         Serial.print(",");
 
         Serial.print(DefaultPid.getD());
-        Serial.print(",");
       } 
       Serial.println(); 
       print_index = 0;
