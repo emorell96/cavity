@@ -180,6 +180,53 @@ class  LPF2
     }
 };
 
+class PID{
+  private:
+    float errorSum = 0;
+    float setPoint = 0;
+    float oldError = 0;
+
+    float P = 0.1;
+    float I = 0.1;
+    float D = 0.1;
+
+  
+  public:
+    void setP(float p){
+      this->P = p;
+    }
+    void setI(float i){
+      this->I = i;
+    }
+    void setD(float d){
+      this->D = d;
+    }
+    
+
+    PID(float P, float I, float D, float setPoint){
+      this->P = P;
+      this->I = I,
+      this->D = D;
+      this->setPoint = setPoint;
+    }
+
+
+
+    // Calculates the correction of the PID from the given error.    
+    float CalculateError(float error){
+        this->errorSum = this->errorSum + (error - this->setPoint)/100000; //Scaling the integral
+        if (this->I*this->errorSum > 400000) //Checking if integral feedback is not too large
+          this->errorSum = 400000/this->I;
+        if (this->I*this->errorSum < -400000)
+          this->errorSum = -400000;
+        this->oldError = error;
+        return this->P*(error - this->setPoint) + this->I*this->errorSum + this->D*(error - this->oldError); //all you have to do is replace this with NN output
+    } 
+};
+
+
+
+
 int r = 0; //index used for sine
 int Refl =0;
 float error = 0;
@@ -233,9 +280,9 @@ float DAC2_offset = 10;//find the proper voltage by delta source
 //140 V on membrane piezo params: minimal I=60n
 
 
-float P = 0.1;   //0.5
-float I = 2;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
-float D = 0.05; //0.15
+const float P = 0.1;   //0.5
+const float I = 2;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
+const float D = 0.05; //0.15
 
 
 
@@ -341,7 +388,7 @@ void setup()
 
 int engage = 0; //switch involved in tranfer between scan and feedback
 
-float setpoint = 0;
+const float setpoint = 0;
 
 int print_index = 0;
 bool maximum_reached = false;
@@ -381,6 +428,8 @@ float voltoutacc=0;
 float t1=0;
 int volt_out = 0;
 byte incomingByte = 122;
+
+PID DefaultPid(P, I, D, setpoint);
 
 void loop() 
 { 
@@ -494,7 +543,28 @@ void loop()
           }               
     }
 ///////////////////////////////////////////////////////////////
-    if (incomingByte == 108 && DAC1_finished == true ) //lock    
+    if(incomingByte == 80 && DAC1_finished) // enter "P" in the serial port followed by a float value.
+    {
+        // try to read the P value from the serial
+        float p = Serial.parseFloat();
+        DefaultPid.setP(p);
+    }
+
+    if(incomingByte == 73 && DAC1_finished) // enter "I" in the serial port followed by a float value.
+    {
+        // try to read the P value from the serial
+        float i = Serial.parseFloat();
+        DefaultPid.setI(i);
+    }
+
+    if(incomingByte == 68 && DAC1_finished) // enter "D" in the serial port followed by a float value.
+    {
+        // try to read the P value from the serial
+        float d = Serial.parseFloat();
+        DefaultPid.setD(d);
+    }
+
+    if (incomingByte == 108 && DAC1_finished) // lock, the byte values come from the ASCII table: https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
     {      
       engage = 1;
       flag = false;
@@ -523,15 +593,9 @@ void loop()
   //                    time_index = 0;          
   //                  }
   //              }
-            if(state_flag == 0)//PID
+            if(state_flag == 0)// PID
             {       
-              errorsum = errorsum + (error - setpoint)/100000;//Scaling the integral
-              if (I*errorsum > 400000) //Checking if integral feedback is not too large
-                errorsum = 400000/I;
-              if (I*errorsum < -400000)
-                errorsum = -400000;
-              C =P*(error - setpoint) + I*errorsum + D*(error - olderror); //all you have to do is replace this with NN output    
-              olderror = error;
+              C = DefaultPid.CalculateError(error);
             }        
           }
 
