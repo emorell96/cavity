@@ -443,7 +443,7 @@ int n=0;
 float voltoutacc=0;
 float t1=0;
 int volt_out = 0;
-byte incomingByte = 122;
+byte incomingByte = 115;
 
 PID DefaultPid(P, I, D, setpoint);
 
