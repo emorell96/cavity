@@ -1,20 +1,5 @@
 #include <SPI.h>
 
-const int reset1 = A0;
-const int clr1   = A1;
-const int ldac1  = A2;
-const int sync1  = A3;
-
-const int reset2 = A4;
-const int clr2   = A5;
-const int ldac2  = A6;
-const int sync2  = A7;
-
-int reset = reset1;
-int clr   = clr1;
-int ldac  = ldac1;
-int sync  = sync1;
-
 const bool plotPIDValues = true;
  
 #define AD5791_NOP 0 // No operation (NOP).
@@ -67,51 +52,6 @@ AD5791_type act_device;
 #define AD5791_OUT_CLAMPED_6K 0x1
 #define AD5791_OUT_TRISTATE 0x2
  
-long AD5791_SetRegisterValue(unsigned char registerAddress, unsigned long registerValue) {
-  unsigned char writeCommand[3] = {0, 0, 0};
-  unsigned long spiWord = 0;
-  char status = 0;
-  spiWord = AD5791_WRITE | AD5791_ADDR_REG(registerAddress) | (registerValue & 0xFFFFF);
-  writeCommand[0] = (spiWord >> 16) & 0x0000FF;
-  writeCommand[1] = (spiWord >> 8 ) & 0x0000FF;
-  writeCommand[2] = (spiWord >> 0 ) & 0x0000FF;
-   
-  digitalWrite(sync,LOW);
-  status = SPI.transfer(writeCommand[0]);
-  status = SPI.transfer(writeCommand[1]);
-  status = SPI.transfer(writeCommand[2]);
-  digitalWrite(sync,HIGH);
- 
-  return 0;
-}
- 
-long AD5791_GetRegisterValue(unsigned char registerAddress) {
-  unsigned char registerWord[3] = {0, 0, 0};
-  unsigned long dataRead = 0x0;
-  char status = 0;
-  registerWord[0] = (AD5791_READ | AD5791_ADDR_REG(registerAddress)) >> 16;
- 
-  digitalWrite(sync,LOW);
- 
-  status = SPI.transfer(registerWord[0]);
-  status = SPI.transfer(registerWord[1]);
-  status = SPI.transfer(registerWord[2]);
-  digitalWrite(sync,HIGH);
- 
- 
-  registerWord[0] = 0x00;
-  registerWord[1] = 0x00;
-  registerWord[2] = 0x00;
-    digitalWrite(sync,LOW);
-  registerWord[0] = SPI.transfer(0x00);
-  registerWord[1] = SPI.transfer(0x00);
-  registerWord[2] = SPI.transfer(0x00);
-    digitalWrite(sync,HIGH);
-  dataRead = ((long)registerWord[0] << 16) |
-             ((long)registerWord[1] << 8) |
-             ((long)registerWord[2] << 0);
-  return dataRead;
-}
 
 //-----------------------------------------------------------------------
 #include <string.h>
@@ -120,6 +60,195 @@ long AD5791_GetRegisterValue(unsigned char registerAddress) {
 IntervalTimer myTimer;
 #define Tsample 25 //sample time for timer in microseconds
 #define pi 3.14159
+
+class LockSystem
+{
+private:
+  /* data */
+  float voltOutDAC1 = 0;
+  float dVoltDAC1 = 0;
+
+
+  float voltLimitDown = 0;
+  float voltLimitUp = 0;
+
+
+  const int reset1 = A0;
+  const int clr1   = A1;
+  const int ldac1  = A2;
+  const int sync1  = A3;
+
+  const int reset2 = A4;
+  const int clr2   = A5;
+  const int ldac2  = A6;
+  const int sync2  = A7;
+
+  int reset = reset1;
+  int clr   = clr1;
+  int ldac  = ldac1;
+  int sync  = sync1;
+  
+  void SetUpPins(){
+    pinMode(A8, INPUT);
+
+    Serial.begin(38400);
+    SPI.begin();
+
+    pinMode(reset1, OUTPUT);
+    pinMode(clr1  , OUTPUT);
+    pinMode(ldac1 , OUTPUT);
+    pinMode(sync1 , OUTPUT);
+    pinMode(reset2, OUTPUT);
+    pinMode(clr2  , OUTPUT);
+    pinMode(ldac2 , OUTPUT);
+    pinMode(sync2 , OUTPUT);
+
+    digitalWrite(ldac1,LOW);
+    digitalWrite(reset1,HIGH);
+    digitalWrite(clr1,HIGH);
+    digitalWrite(sync1,HIGH);
+    digitalWrite(ldac2,LOW);
+    digitalWrite(reset2,HIGH);
+    digitalWrite(clr2,HIGH);
+    digitalWrite(sync2,HIGH);
+
+    SPI.beginTransaction(SPISettings(3800000, MSBFIRST, SPI_MODE1));
+
+  }
+public:
+  LockSystem(){}
+public:
+  long AD5791_SetRegisterValue(unsigned char registerAddress, unsigned long registerValue) {
+    unsigned char writeCommand[3] = {0, 0, 0};
+    unsigned long spiWord = 0;
+    char status = 0;
+
+    spiWord = AD5791_WRITE | AD5791_ADDR_REG(registerAddress) | (registerValue & 0xFFFFF);
+
+    writeCommand[0] = (spiWord >> 16) & 0x0000FF;
+    writeCommand[1] = (spiWord >> 8 ) & 0x0000FF;
+    writeCommand[2] = (spiWord >> 0 ) & 0x0000FF;
+    
+    digitalWrite(sync,LOW);
+    status = SPI.transfer(writeCommand[0]);
+    status = SPI.transfer(writeCommand[1]);
+    status = SPI.transfer(writeCommand[2]);
+    digitalWrite(sync,HIGH);
+  
+    return 0;
+  }
+public:
+  long AD5791_GetRegisterValue(unsigned char registerAddress) {
+    unsigned char registerWord[3] = {0, 0, 0};
+    unsigned long dataRead = 0x0;
+    char status = 0;
+    registerWord[0] = (AD5791_READ | AD5791_ADDR_REG(registerAddress)) >> 16;
+  
+    digitalWrite(sync,LOW);
+  
+    status = SPI.transfer(registerWord[0]);
+    status = SPI.transfer(registerWord[1]);
+    status = SPI.transfer(registerWord[2]);
+    digitalWrite(sync,HIGH);
+  
+  
+    registerWord[0] = 0x00;
+    registerWord[1] = 0x00;
+    registerWord[2] = 0x00;
+      digitalWrite(sync,LOW);
+    registerWord[0] = SPI.transfer(0x00);
+    registerWord[1] = SPI.transfer(0x00);
+    registerWord[2] = SPI.transfer(0x00);
+      digitalWrite(sync,HIGH);
+    dataRead = ((long)registerWord[0] << 16) |
+              ((long)registerWord[1] << 8) |
+              ((long)registerWord[2] << 0);
+    return dataRead;
+}
+  void SetUp(){
+    // setup the pins
+    SetUpPins();
+
+    long status = AD5791_GetRegisterValue(AD5791_REG_CTRL);  
+    status = AD5791_GetRegisterValue(AD5791_REG_CTRL);
+  
+    unsigned long oldCtrl = status;
+    oldCtrl = oldCtrl & ~(AD5791_CTRL_LINCOMP(-1) | AD5791_CTRL_SDODIS | AD5791_CTRL_BIN2SC | AD5791_CTRL_RBUF | AD5791_CTRL_OPGND);
+  
+    AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl);  
+    AD5791_GetRegisterValue(AD5791_REG_CTRL);
+    long d=1;
+    digitalWrite(ldac,LOW);
+
+    ldac=ldac1;
+    reset=reset1;
+    clr=clr1;
+    sync=sync1; 
+    
+    AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
+    AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
+
+    ldac=ldac2;
+    reset=reset2;
+    clr=clr2;
+    sync=sync2; 
+    
+    AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
+    AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
+
+    analogReadResolution(12); // 1 point corresponds to 3.3V/2^(12) 
+    analogReadAveraging(3);
+
+    myTimer.begin(flagpost, Tsample); //reset flag to true every Tsample
+    delay(1000);
+    
+    AC_ampl_bits = max_bits*ampl/5;
+    volt_start = AC_ampl_bits;
+    Volt = 0;
+    dV = 1.0/500.0;       
+
+
+
+    for (int h=0;h<36;h++) //sinetable is generated
+      {
+        for (int j =0; j<sinetablesize; j++)
+        {
+          sinetable[h][j] = max_bits*(ampl*sin(j*2*pi/sinetablesize+2*h*pi/36))/10;
+        }
+      }
+
+    
+
+
+    //switch to DAC2 and initialize
+    ldac=ldac2;
+    reset=reset2;
+    clr=clr2;
+    sync=sync2; 
+    
+    AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);  
+    AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
+    AD5791_SetRegisterValue(AD5791_REG_DAC, DAC2_offset);//DC offset for DAC2   
+    
+    
+
+    // initialize DAC1
+    volt_start=250000;//scan from 5V
+    ldac=ldac1;
+    reset=reset1;
+    clr=clr1;
+    sync=sync1; 
+    
+    AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
+    AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
+
+  
+    
+    Serial.println("initialized");
+    delay(1000);
+
+  }
+};
 
 //Low pass butterworth filter order=2 alpha1=0.0003 ==> 15Hz
 class  FilterBuLp2
@@ -182,6 +311,8 @@ class  LPF2
     }
 };
 
+
+
 class PID{
   private:
     float errorSum = 0;
@@ -191,7 +322,6 @@ class PID{
     float P = 0.1;
     float I = 0.1;
     float D = 0.1;
-
   
   public:
     void setP(float p){
@@ -241,6 +371,40 @@ class PID{
 };
 
 
+
+// tries to maximise P until you get oscillation in the error signal. Then once oscillations are there, it calculates the values of P, I and D based on Zigler Nichols method's
+class ZNPidAdjuster{
+  private:
+    float minP = 0;
+    float maxP = 1;
+    
+    int steps = 50;
+    PID* internalPid;
+  
+  public:
+    
+    ZNPidAdjuster(float minP, float maxP, int steps, PID* internalPid)
+    {
+        this->minP = minP;
+        this->maxP = maxP;
+        this->internalPid = internalPid;
+    }
+    // SEts the value of P in the pid to the correct value depending on which step we are when going over P values.
+    void SetScanPValue(int stepNumber){
+      float stepSize = (maxP - minP)/steps;
+
+      if(stepNumber == 0){
+        internalPid->setP(minP);
+      }
+      
+      else if(stepNumber < steps){
+        internalPid->setP(minP+stepSize*stepNumber);
+      }
+    }
+
+
+
+};
 
 
 int r = 0; //index used for sine
@@ -300,106 +464,12 @@ const float P = 0.0;   //0.5
 const float I = 0.0;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
 const float D = 0.0; //0.15
 
-
+LockSystem MainLockSystem;
 
 void setup() 
 {
-  pinMode(A8, INPUT);
-  Serial.begin(38400);
-  SPI.begin();
-  pinMode(reset1, OUTPUT);
-  pinMode(clr1  , OUTPUT);
-  pinMode(ldac1 , OUTPUT);
-  pinMode(sync1 , OUTPUT);
-  pinMode(reset2, OUTPUT);
-  pinMode(clr2  , OUTPUT);
-  pinMode(ldac2 , OUTPUT);
-  pinMode(sync2 , OUTPUT);
-
-  digitalWrite(ldac1,LOW);
-  digitalWrite(reset1,HIGH);
-  digitalWrite(clr1,HIGH);
-  digitalWrite(sync1,HIGH);
-  digitalWrite(ldac2,LOW);
-  digitalWrite(reset2,HIGH);
-  digitalWrite(clr2,HIGH);
-  digitalWrite(sync2,HIGH);
-  
-  SPI.beginTransaction(SPISettings(3800000, MSBFIRST, SPI_MODE1));
-     
-  long status = AD5791_GetRegisterValue(AD5791_REG_CTRL);  
-  status = AD5791_GetRegisterValue(AD5791_REG_CTRL);
- 
-  unsigned long oldCtrl = status;
-  oldCtrl = oldCtrl & ~(AD5791_CTRL_LINCOMP(-1) | AD5791_CTRL_SDODIS | AD5791_CTRL_BIN2SC | AD5791_CTRL_RBUF | AD5791_CTRL_OPGND);
- 
-  status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl);  
-  status = AD5791_GetRegisterValue(AD5791_REG_CTRL);
-  long d=1;
-  digitalWrite(ldac,LOW);
-
-  ldac=ldac1;
-  reset=reset1;
-  clr=clr1;
-  sync=sync1; 
-  status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
-  AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
-
-  ldac=ldac2;
-  reset=reset2;
-  clr=clr2;
-  sync=sync2; 
-  status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
-  AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
-
   //---------------------------------------
-  analogReadResolution(12); // 1 point corresponds to 3.3V/2^(12) 
-  analogReadAveraging(3);
-  myTimer.begin(flagpost, Tsample); //reset flag to true every Tsample
-  delay(1000);
-  
-  AC_ampl_bits = max_bits*ampl/5;
-  volt_start = AC_ampl_bits;
-  Volt = 0;
-  dV = 1.0/500.0;       
-
-
-
-  for (int h=0;h<36;h++) //sinetable is generated
-    {
-      for (int j =0; j<sinetablesize; j++)
-      {
-        sinetable[h][j] = max_bits*(ampl*sin(j*2*pi/sinetablesize+2*h*pi/36))/10;
-      }
-    }
-
-  
-
-
-   //switch to DAC2 and initialize
-  ldac=ldac2;
-  reset=reset2;
-  clr=clr2;
-  sync=sync2; 
-  status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);  
-  AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
-  AD5791_SetRegisterValue(AD5791_REG_DAC, DAC2_offset);//DC offset for DAC2   
-  
-  
-
-  // initialize DAC1
-  volt_start=250000;//scan from 5V
-  ldac=ldac1;
-  reset=reset1;
-  clr=clr1;
-  sync=sync1; 
-  status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
-  AD5791_SetRegisterValue(AD5791_REG_DAC, 1);
-
- 
-  
-  Serial.println("initialized");
-  delay(1000);
+  MainLockSystem.SetUp();
 }
 
 int engage = 0; //switch involved in tranfer between scan and feedback
@@ -446,6 +516,8 @@ int volt_out = 0;
 byte incomingByte = 122;
 
 PID DefaultPid(P, I, D, setpoint);
+ZNPidAdjuster PidAdjuster(0, 0.2, 100, &DefaultPid);
+
 
 void loop() 
 { 
@@ -489,7 +561,7 @@ void loop()
 
     r = (r+1) % sinetablesize;
     
-    AD5791_SetRegisterValue(AD5791_REG_DAC, volt_out_DAC1);
+    MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_DAC, volt_out_DAC1);
   
       
 ///////////////////////////////////////////////////////////////
@@ -532,15 +604,15 @@ void loop()
             reset=reset2;
             clr=clr2;
             sync=sync2; 
-            status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
-            AD5791_SetRegisterValue(AD5791_REG_DAC, DAC2_offset);
+            status = MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
+            MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_DAC, DAC2_offset);
 
               // initialize DAC1            
             ldac=ldac1;
             reset=reset1;
             clr=clr1;
             sync=sync1; 
-            status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);     
+            status = MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);     
         }                 
     }
     ///////////////////////////////////////////////////////////////  
@@ -554,17 +626,18 @@ void loop()
             reset=reset2;
             clr=clr2;
             sync=sync2; 
-            status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
-            AD5791_SetRegisterValue(AD5791_REG_DAC, DAC2_offset);
+            status = MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);      
+            MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_DAC, DAC2_offset);
 
               // initialize DAC1            
             ldac=ldac1;
             reset=reset1;
             clr=clr1;
             sync=sync1; 
-            status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);     
+            status = MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);     
         }                 
     }
+
 ///////////////////////////////////////////////////////////////   
     if (incomingByte == 108 && DAC1_finished == false ) //lock
     {
@@ -595,7 +668,7 @@ void loop()
         volt_out_DAC1 = volt_limit_up;
       if (volt_out_DAC1 < volt_limit_down)
         volt_out_DAC1 = volt_limit_down;
-      AD5791_SetRegisterValue(AD5791_REG_DAC, volt_out_DAC1);
+      MainLockSystem.AD5791_SetRegisterValue(AD5791_REG_DAC, volt_out_DAC1);
   
              
   
