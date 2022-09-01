@@ -363,7 +363,8 @@ public:
     }
 
     void Scan(int offsetScan = 0) {
-        if (voltOut > voltUpperLimit || voltOut < voltLowerLimit)
+        float newVoltage = voltOut + dvoltOut + offsetScan;
+        if (newVoltage > voltUpperLimit || newVoltage < voltLowerLimit)
             dvoltOut = -dvoltOut;
 
         SetVoltOut(voltOut + dvoltOut + offsetScan);
@@ -623,7 +624,7 @@ public:
                 }
             }
 
-            dac1->SetVoltOut(lastResonanceVolt + correction + sinetable[0][r]);
+            dac1->SetVoltOut(lastResonanceVolt + correction + sinetable[0][sineTableIndex]);
             dac1->SendVoltageToRegister();
         }
         else {
@@ -649,10 +650,16 @@ LockSystem::LockSystem(IntervalTimer* intervalTimer, PID* defaultPid, Dac* dac1,
     this->lpf = lpf;
 };
 
+const float setpoint = 0;
+const float P = 0.0;   //0.5
+const float I = 0.0;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
+const float D = 0.0; //0.15
+
 FilterBuLp2 LPF;
 Dac Dac1(reset1, clr1, ldac1, sync1);
 Dac Dac2(reset2, clr2, ldac2, sync2);
 IntervalTimer myTimer;
+PID DefaultPid(P, I, D, setpoint);
 
 LockSystem MainLock(&myTimer, &DefaultPid, &Dac1, &Dac2, &LPF);
 
@@ -703,11 +710,6 @@ LPF2 lpf2_2(lpf2_freq2);
 //140 V on membrane piezo params: minimal I=60n
 
 
-const float P = 0.0;   //0.5
-const float I = 0.0;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
-const float D = 0.0; //0.15
-
-
 
 void setup()
 {
@@ -718,7 +720,7 @@ void setup()
 
 //int engage = 0; //switch involved in tranfer between scan and feedback
 //
-const float setpoint = 0;
+
 //
 int print_index = 0;
 //bool maximum_reached = false;
@@ -759,14 +761,14 @@ int print_index = 0;
 //int volt_out = 0;
 byte incomingByte = 122;
 
-PID DefaultPid(P, I, D, setpoint);
+
 
 void loop()
 {
     if (Serial.available())
     {
         incomingByte = Serial.read();  // will not be -1
-        Serial.println(incomingByte);   //  l=108; s=115;  z=122
+        //Serial.println(incomingByte);   //  l=108; s=115;  z=122
         if (incomingByte == 80) // enter "P" in the serial port followed by a float value.
         {
             // try to read the P value from the serial
@@ -845,10 +847,12 @@ void loop()
         print_index++;
         if (print_index == 1000)
         {
+            Serial.print("DAC1 Voltage:");
             Serial.print(Dac1.GetVoltOut() / 100);
             Serial.print(",");
-            /*Serial.print(MainLock.GetReflection());
-            Serial.print(",");*/
+            Serial.print("Reflection:");
+            Serial.print(MainLock.GetReflection());
+            Serial.print(",");
             Serial.print(MainLock.GetError());
 
             if (plotPIDValues) {
