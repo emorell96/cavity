@@ -386,16 +386,15 @@ public:
     int AD5791_SetRegisterValue(unsigned char registerAddress, unsigned long registerValue) {
         unsigned char writeCommand[3] = { 0, 0, 0 };
         unsigned long spiWord = 0;
-        char status = 0;
         spiWord = AD5791_WRITE | AD5791_ADDR_REG(registerAddress) | (registerValue & 0xFFFFF);
         writeCommand[0] = (spiWord >> 16) & 0x0000FF;
         writeCommand[1] = (spiWord >> 8) & 0x0000FF;
         writeCommand[2] = (spiWord >> 0) & 0x0000FF;
 
         digitalWrite(sync, LOW);
-        status = SPI.transfer(writeCommand[0]);
-        status = SPI.transfer(writeCommand[1]);
-        status = SPI.transfer(writeCommand[2]);
+        SPI.transfer(writeCommand[0]);
+        SPI.transfer(writeCommand[1]);
+        SPI.transfer(writeCommand[2]);
         digitalWrite(sync, HIGH);
 
         return 0;
@@ -403,14 +402,14 @@ public:
     long AD5791_GetRegisterValue(unsigned char registerAddress) {
         unsigned char registerWord[3] = { 0, 0, 0 };
         unsigned long dataRead = 0x0;
-        char status = 0;
+
         registerWord[0] = (AD5791_READ | AD5791_ADDR_REG(registerAddress)) >> 16;
 
         digitalWrite(sync, LOW);
 
-        status = SPI.transfer(registerWord[0]);
-        status = SPI.transfer(registerWord[1]);
-        status = SPI.transfer(registerWord[2]);
+        SPI.transfer(registerWord[0]);
+        SPI.transfer(registerWord[1]);
+        SPI.transfer(registerWord[2]);
         digitalWrite(sync, HIGH);
 
 
