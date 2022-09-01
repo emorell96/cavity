@@ -249,7 +249,7 @@ public:
     /// </summary>
     void SetVoltOut(unsigned long voltOut) {
         if (voltOut > voltUpperLimit) {
-            this->voltOut = voltUpperLimit;
+            this->voltOut = voltUpperLimit - 1;
         }
         else if (voltOut < voltLowerLimit) {
             this->voltOut = voltLowerLimit + 1;
@@ -366,7 +366,7 @@ public:
         if (voltOut > voltUpperLimit || voltOut < voltLowerLimit)
             dvoltOut = -dvoltOut;
 
-        voltOut += dvoltOut + offsetScan;
+        SetVoltOut(voltOut + dvoltOut + offsetScan);
 
         isFinished = false;
     }
@@ -440,16 +440,21 @@ private:
 
     // Pk-Pk amplitude of sinewave in volts
     float sinAmplitude = 0.01; 
-
+    float correction = 0;
 
     double voltLowerLimit = 100000;
     double voltUpperLimit = 300000;
+
+    bool engage = false;
+    bool scanningDone = false;
+    bool stateFlag = false;
 
     IntervalTimer* intervalTimer;
 
     Dac* dac1;
     Dac* dac2;
     FilterBuLp2* lpf;
+    PID* defaultPid;
 
     void GenerateSinetable(float amplitude) {
         for (int h = 0; h < 36; h++) //sinetable is generated
@@ -522,7 +527,7 @@ private:
         delay(1000);
     }
 public:
-    LockSystem(IntervalTimer* intervalTimer, Dac* dac1, Dac* dac2, FilterBuLp2* lpf);
+    LockSystem(IntervalTimer* intervalTimer, PID* defaultPid, Dac* dac1, Dac* dac2, FilterBuLp2* lpf);
 
     void SetReflectionPin(int pin) {
         reflectionPin = pin;
@@ -598,7 +603,28 @@ public:
 
     void OnLock() {
         if (dac1->IsFinished()) {
+            engage = true;
+            scanningDone = true;
+            if (engage == 1)   //feedback on
+            {
+                // time_index = time_index + 1;
+                //              if (state_flag == 0)    //switch pid off  state_flag==0
+                //              {
+                //                  if (freeze && time_index > pid_on_loops)
+                //                  {
+                //                    flag_monitor = 1000;
+                //                    state_flag = 1; 
+                //                    time_index = 0;          
+                //                  }
+                //              }
+                if (stateFlag == false)// PID
+                {
+                    correction = defaultPid->CalculateCorrection(error);
+                }
+            }
 
+            dac1->SetVoltOut(lastResonanceVolt + correction + sinetable[0][r]);
+            dac1->SendVoltageToRegister();
         }
         else {
             dac1->Scan(sinetable[0][sineTableIndex]);
@@ -615,8 +641,9 @@ public:
     }
 };
 
-LockSystem::LockSystem(IntervalTimer* intervalTimer, Dac* dac1, Dac* dac2, FilterBuLp2* lpf) {
+LockSystem::LockSystem(IntervalTimer* intervalTimer, PID* defaultPid, Dac* dac1, Dac* dac2, FilterBuLp2* lpf) {
     this->intervalTimer = intervalTimer;
+    this->defaultPid = defaultPid;
     this->dac1 = dac1;
     this->dac2 = dac2;
     this->lpf = lpf;
@@ -627,13 +654,13 @@ Dac Dac1(reset1, clr1, ldac1, sync1);
 Dac Dac2(reset2, clr2, ldac2, sync2);
 IntervalTimer myTimer;
 
-LockSystem MainLock(&myTimer, &Dac1, &Dac2, &LPF);
+LockSystem MainLock(&myTimer, &DefaultPid, &Dac1, &Dac2, &LPF);
 
-int r = 0; //index used for sine
-int Refl = 0;
-float error = 0;
-float C = 0; //DC correction in 12-bit units
-int phi = 20;
+//int r = 0; //index used for sine
+//int Refl = 0;
+//float error = 0;
+//float C = 0; //DC correction in 12-bit units
+//int phi = 20;
 
 
 
@@ -641,16 +668,16 @@ int phi = 20;
 
 //For sinewaves
 
-float ampl = 0.01;//Pk-Pk amplitude of sinewave in Volt 
-//Scaling is a bit off. Accurate for 0.5-2.0V, 0.025 will give 40mV
-
-
-float AC_ampl_bits = 0;
-float dV = 0;
-float Volt = 0;
-float volt_start;
-bool flag_dV_reduced = false;
-int monitor_shift = 0;
+//float ampl = 0.01;//Pk-Pk amplitude of sinewave in Volt 
+////Scaling is a bit off. Accurate for 0.5-2.0V, 0.025 will give 40mV
+//
+//
+//float AC_ampl_bits = 0;
+//float dV = 0;
+//float Volt = 0;
+//float volt_start;
+//bool flag_dV_reduced = false;
+//int monitor_shift = 0;
 
 
 
@@ -659,9 +686,9 @@ int monitor_shift = 0;
 LPF2 lpf2_1(lpf2_freq1);
 LPF2 lpf2_2(lpf2_freq2);
 
-double volt_limit_down = 100000;
-double volt_limit_up = 300000;
-float DAC2_offset = 10;//find the proper voltage by delta source
+//double volt_limit_down = 100000;
+//double volt_limit_up = 300000;
+//float DAC2_offset = 10;//find the proper voltage by delta source
 //PDH LPF 1.28kHz
 
 //works best with 1 kHz ZI LPF
@@ -689,47 +716,47 @@ void setup()
     
 }
 
-int engage = 0; //switch involved in tranfer between scan and feedback
-
+//int engage = 0; //switch involved in tranfer between scan and feedback
+//
 const float setpoint = 0;
-
+//
 int print_index = 0;
-bool maximum_reached = false;
-float flag_monitor = 0;
-bool scanning_done = true;   //if false, pid on after scanning
-bool freeze = true;
-int time_index = 0;
-int state_flag = 0;
-
-//freeze parameters
-int pid_on_loops = 100000;    //2 sec 
-int freeze_loops = 5000;    //1 sec
-int freeze_multiplier = 20;  //30;
-int cycle_index_freeze_extension = 30;
-float I_drift = 0.15;    //pid I component for the drift
-float C_end_sum = 0;
-int index_loop = 0;   //index_loop * Tsample = time since the program started
-int index_loop_cycle_start = 0;
-float drift = 0;
-int cycle_index = 0;
-bool freeze_duration_increase_happened = false;
-
-bool DAC2_finished = false;
-bool DAC1_finished = false;
-float volt_out_DAC2 = 1;
-float dvolt_DAC2 = 0.5;
-long status;
-double last_resonance_volt = 0;
-float dvolt_DAC1 = 0.5;
-double volt_out_DAC1 = -100;
-int number_scans_DAC1 = 0;
-float temp_volt = 0;
-float temp_volt_d = 0.0005;
-int temp_flag = 0;
-int n = 0;
-float voltoutacc = 0;
-float t1 = 0;
-int volt_out = 0;
+//bool maximum_reached = false;
+//float flag_monitor = 0;
+//bool scanning_done = true;   //if false, pid on after scanning
+//bool freeze = true;
+//int time_index = 0;
+//int state_flag = 0;
+//
+////freeze parameters
+//int pid_on_loops = 100000;    //2 sec 
+//int freeze_loops = 5000;    //1 sec
+//int freeze_multiplier = 20;  //30;
+//int cycle_index_freeze_extension = 30;
+//float I_drift = 0.15;    //pid I component for the drift
+//float C_end_sum = 0;
+//int index_loop = 0;   //index_loop * Tsample = time since the program started
+//int index_loop_cycle_start = 0;
+//float drift = 0;
+//int cycle_index = 0;
+//bool freeze_duration_increase_happened = false;
+//
+//bool DAC2_finished = false;
+//bool DAC1_finished = false;
+//float volt_out_DAC2 = 1;
+//float dvolt_DAC2 = 0.5;
+//long status;
+//double last_resonance_volt = 0;
+//float dvolt_DAC1 = 0.5;
+//double volt_out_DAC1 = -100;
+//int number_scans_DAC1 = 0;
+//float temp_volt = 0;
+//float temp_volt_d = 0.0005;
+//int temp_flag = 0;
+//int n = 0;
+//float voltoutacc = 0;
+//float t1 = 0;
+//int volt_out = 0;
 byte incomingByte = 122;
 
 PID DefaultPid(P, I, D, setpoint);
@@ -802,14 +829,7 @@ void loop()
         ///////////////////////////////////////////////////////////////  
         if (incomingByte == 100)  //"d" for down, decreases DAC2 voltage
         {
-            MainLock.OnDecreaseOffset();
-                // initialize DAC1            
-                /*ldac = ldac1;
-                reset = reset1;
-                clr = clr1;
-                sync = sync1;
-                status = AD5791_SetRegisterValue(AD5791_REG_CTRL, oldCtrl_c);*/
-            
+            MainLock.OnDecreaseOffset();            
         }
         ///////////////////////////////////////////////////////////////  
         if (incomingByte == 117)  //"u" for up, increases DAC2 voltage
@@ -817,59 +837,10 @@ void loop()
             MainLock.OnIncreaseOffset();
         }
         ///////////////////////////////////////////////////////////////   
-        if (incomingByte == 108 && DAC1_finished == false) //lock
+        if (incomingByte == 108) //lock
         {
-            if (volt_out_DAC1 > volt_limit_up || volt_out_DAC1 < volt_limit_down)
-                dvolt_DAC1 = -dvolt_DAC1;
-            volt_out_DAC1 = volt_out_DAC1 + dvolt_DAC1 + sinetable[0][r];
-
-            //////////////////once the resonace found, scan a small range/////////////////
-            if (Refl < 5000)  //last_resonance_volt initialized 0
-            {
-                Serial.println("resonance found");
-                DAC1_finished = true;
-                //dvolt_DAC1 = dvolt_DAC1 / 8.0;
-                last_resonance_volt = volt_out_DAC1;
-            }
+            MainLock.OnLock();
         }
-        /////////////////////////////////////////////////////////////////
-        //if (incomingByte == 108 && DAC1_finished) // lock, the byte values come from the ASCII table: https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
-        //{
-        //    engage = 1;
-        //    flag = false;
-        //    scanning_done = true;
-
-
-
-        //    //restrict locking range
-        //    if (volt_out_DAC1 > volt_limit_up)
-        //        volt_out_DAC1 = volt_limit_up;
-        //    if (volt_out_DAC1 < volt_limit_down)
-        //        volt_out_DAC1 = volt_limit_down;
-        //    AD5791_SetRegisterValue(AD5791_REG_DAC, volt_out_DAC1);
-
-
-
-        //    if (engage == 1)   //feedback on
-        //    {
-        //        time_index = time_index + 1;
-        //        //              if (state_flag == 0)    //switch pid off  state_flag==0
-        //        //              {
-        //        //                  if (freeze && time_index > pid_on_loops)
-        //        //                  {
-        //        //                    flag_monitor = 1000;
-        //        //                    state_flag = 1; 
-        //        //                    time_index = 0;          
-        //        //                  }
-        //        //              }
-        //        if (state_flag == 0)// PID
-        //        {
-        //            C = DefaultPid.CalculateCorrection(error);
-        //        }
-        //    }
-
-        //    volt_out_DAC1 = last_resonance_volt + C + sinetable[0][r];
-        //}
 
         print_index++;
         if (print_index == 1000)
