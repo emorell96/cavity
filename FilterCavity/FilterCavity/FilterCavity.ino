@@ -275,7 +275,7 @@ public:
     }
 
     unsigned long GetCurrentControlValue() {
-        long status = AD5791_GetRegisterValue(AD5791_REG_CTRL); //why is this done twice?
+        AD5791_GetRegisterValue(AD5791_REG_CTRL); //why is this done twice?
         return AD5791_GetRegisterValue(AD5791_REG_CTRL);
     }
 
