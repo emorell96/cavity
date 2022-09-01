@@ -534,6 +534,10 @@ public:
         reflectionPin = pin;
     }
 
+    void SetErrorPhase(int errorPhase) {
+        this->errorPhase = errorPhase;
+    }
+
     void SetVoltLowerLimit(double voltLowerLimit) {
         this->voltLowerLimit = voltLowerLimit;
     }
@@ -788,6 +792,12 @@ void loop()
             // try to read the P value from the serial
             float d = Serial.parseFloat();
             DefaultPid.setD(d);
+        }
+
+        if (incomingByte == 102) // enter "f" to change the phase of the error signal
+        {
+            float phase = Serial.parseFloat();
+            MainLock.SetErrorPhase(phase);
         }
     }
 
