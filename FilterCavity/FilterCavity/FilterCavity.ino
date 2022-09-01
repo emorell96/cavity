@@ -856,7 +856,7 @@ void loop()
         print_index++;
         if (print_index == 1000)
         {
-            Serial.print("DAC1 Voltage:");
+            Serial.print("DAC1:");
             Serial.print(Dac1.GetVoltOut() / 100);
             Serial.print(",");
             Serial.print("Reflection:");
