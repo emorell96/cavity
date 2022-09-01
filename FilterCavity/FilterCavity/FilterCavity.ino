@@ -862,6 +862,7 @@ void loop()
             Serial.print("Reflection:");
             Serial.print(MainLock.GetReflection());
             Serial.print(",");
+            Serial.print("Error:");
             Serial.print(MainLock.GetError());
 
             if (plotPIDValues) {
