@@ -21,9 +21,7 @@ const bool plotPIDValues = true;
 #define AD5791_REG_CLR_CODE 3 // Clearcode register.
 #define AD5791_CMD_WR_SOFT_CTRL 4 // Software control register(Write only).
 
-typedef enum {
-    ID_AD5760, ID_AD5780, ID_AD5781, ID_AD5790, ID_AD5791,
-} AD5791_type;
+typedef enum { ID_AD5760, ID_AD5780, ID_AD5781, ID_AD5790, ID_AD5791, } AD5791_type;
 
 struct ad5791_chip_info {
     unsigned int resolution;
@@ -154,8 +152,8 @@ private:
     float oldError = 0;
 
     float P = 0.1;
-    float I = 0.1;
-    float D = 0.1;
+    float I = 0.0;
+    float D = 0.0;
 
 
 public:
@@ -167,6 +165,9 @@ public:
     }
     void setD(float d) {
         this->D = d;
+    }
+    void setSetpoint(float setPoint) {
+        this->setPoint = setPoint;
     }
 
     float getP() {
@@ -183,14 +184,12 @@ public:
         this->errorSum = 0;
     }
 
-
     PID(float P, float I, float D, float setPoint) {
         this->P = P;
-        this->I = I,
-            this->D = D;
+        this->I = I;
+        this->D = D;
         this->setPoint = setPoint;
     }
-
 
 
     // Calculates the correction of the PID from the given error.    
@@ -227,7 +226,6 @@ private:
     bool isFinished = false;
 
 public:
-
     Dac(int resetPin, int clearPin, int ldacPin, int syncPin) {
         this->reset = resetPin;
         this->clr = clearPin;
@@ -275,7 +273,7 @@ public:
     }
 
     unsigned long GetCurrentControlValue() {
-        AD5791_GetRegisterValue(AD5791_REG_CTRL); //why is this done twice?
+        // AD5791_GetRegisterValue(AD5791_REG_CTRL); //why is this done twice?
         return AD5791_GetRegisterValue(AD5791_REG_CTRL);
     }
 
@@ -366,12 +364,9 @@ public:
         float newVoltage = voltOut + dvoltOut + offsetScan;
         if (newVoltage > voltUpperLimit || newVoltage < voltLowerLimit)
             dvoltOut = -dvoltOut;
-
         SetVoltOut(voltOut + dvoltOut + offsetScan);
-
         isFinished = false;
     }
-
 
 
     bool IsFinished() {
@@ -406,13 +401,10 @@ public:
         registerWord[0] = (AD5791_READ | AD5791_ADDR_REG(registerAddress)) >> 16;
 
         digitalWrite(sync, LOW);
-
         SPI.transfer(registerWord[0]);
         SPI.transfer(registerWord[1]);
         SPI.transfer(registerWord[2]);
         digitalWrite(sync, HIGH);
-
-
         registerWord[0] = 0x00;
         registerWord[1] = 0x00;
         registerWord[2] = 0x00;
@@ -421,15 +413,13 @@ public:
         registerWord[1] = SPI.transfer(0x00);
         registerWord[2] = SPI.transfer(0x00);
         digitalWrite(sync, HIGH);
-        dataRead = ((long)registerWord[0] << 16) |
-            ((long)registerWord[1] << 8) |
-            ((long)registerWord[2] << 0);
+        dataRead = ((long)registerWord[0] << 16) | ((long)registerWord[1] << 8) | ((long)registerWord[2] << 0);
         return dataRead;
     }
 };
 
 class LockSystem {
-private:
+private://can only be changed in class
     int reflection;
     float error;
     int errorPhase = 20;
@@ -439,7 +429,7 @@ private:
     int reflectionPin = A8;
 
     // Pk-Pk amplitude of sinewave in volts
-    float sinAmplitude = 0.01; 
+    float sinAmplitude = 0.0;
     float correction = 0;
 
     double voltLowerLimit = 100000;
@@ -450,6 +440,14 @@ private:
     bool stateFlag = false;
 
     IntervalTimer* intervalTimer;
+
+    // tries to keep track of maxima found for the pdh signal.
+    float maxErrorVolt = 0;
+    long maxErrorValue = 0;
+
+    float minErrorVolt = 0;
+    long minErrorValue = 0;
+
 
     Dac* dac1;
     Dac* dac2;
@@ -468,6 +466,20 @@ private:
 
     float CalculateAcBits() {
         return max_bits * sinAmplitude / 5; // why divided by 5?
+    }
+
+    void TrackErrorMaxima(float error) {
+        if (error > maxErrorValue) {
+            maxErrorValue = error;
+            maxErrorVolt = dac1->GetVoltOut();
+        }
+    }
+
+    void TrackErrorMinima(float error) {
+        if (error < minErrorValue) {
+            minErrorValue = error;
+            minErrorVolt = dac1->GetVoltOut();
+        }
     }
 
     void GenerateSinetable() {
@@ -491,10 +503,9 @@ private:
 
         dac1->WriteControlValue(oldCtrl);
         dac1->GetControlValue();
-
         dac1->LoadDac();
-        dac1->WriteControlValue(oldCtrl_c);
 
+        dac1->WriteControlValue(oldCtrl_c);
         dac1->WriteDacValue(1);
 
         dac2->WriteControlValue(oldCtrl_c);
@@ -504,7 +515,6 @@ private:
         analogReadResolution(12); // 1 point corresponds to 3.3V/2^(12) 
         analogReadAveraging(3);
         intervalTimer->begin(flagpost, Tsample); //reset flag to true every Tsample
-
         delay(1000);
 
         GenerateSinetable();
@@ -513,15 +523,10 @@ private:
         dac2->WriteDacValue(1);
         dac2->ResetOffset(); // DC offset for DAC2
 
-
-
         // initialize DAC1
         dac1->WriteControlValue(oldCtrl_c);
         dac1->WriteDacValue(1);
-
         dac1->ResetVoltageToLowerLimit();
-
-        
 
         Serial.println("initialized");
         delay(1000);
@@ -562,8 +567,12 @@ public:
     }
 
     float CalculateError(float reflection) {
-        return -lpf->main(sinetable[errorPhase][sineTableIndex] * reflection) / 50.0;
+        return reflection;
     }
+
+    //    float CalculateError(float reflection) {
+    //        return -lpf->main(sinetable[errorPhase][sineTableIndex] * reflection) / 50.0;
+    //    }
 
     float CalculateError() {
         return CalculateError(ReadReflectionValue());
@@ -605,6 +614,8 @@ public:
         dac2->StepUp();
     }
 
+
+
     void OnLock() {
         if (dac1->IsFinished()) {
             engage = true;
@@ -631,10 +642,14 @@ public:
             dac1->SendVoltageToRegister();
         }
         else {
+
             dac1->Scan(sinetable[0][sineTableIndex]);
 
+
+
             //////////////////once the resonace found, scan a small range/////////////////
-            if (GetReflection() < 5000)  //last_resonance_volt initialized 0
+            //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
+            if (GetError() > 130000)
             {
                 Serial.println("resonance found");
                 dac1->SetIsFinished(true);
@@ -653,8 +668,8 @@ LockSystem::LockSystem(IntervalTimer* intervalTimer, PID* defaultPid, Dac* dac1,
     this->lpf = lpf;
 };
 
-const float setpoint = 0;
-const float P = 0.0;   //0.5
+const float setpoint = 101000;
+const float P = 0.1;   //0.5
 const float I = 0.0;  //320 -> 250 Hz in ZI LPF min; 32 -> 15 Hz in ZI LPF min
 const float D = 0.0; //0.15
 
@@ -664,34 +679,7 @@ Dac Dac2(reset2, clr2, ldac2, sync2);
 IntervalTimer myTimer;
 PID DefaultPid(P, I, D, setpoint);
 
-LockSystem MainLock(&myTimer, &DefaultPid, &Dac1, &Dac2, &LPF);
-
-//int r = 0; //index used for sine
-//int Refl = 0;
-//float error = 0;
-//float C = 0; //DC correction in 12-bit units
-//int phi = 20;
-
-
-
-
-
-//For sinewaves
-
-//float ampl = 0.01;//Pk-Pk amplitude of sinewave in Volt 
-////Scaling is a bit off. Accurate for 0.5-2.0V, 0.025 will give 40mV
-//
-//
-//float AC_ampl_bits = 0;
-//float dV = 0;
-//float Volt = 0;
-//float volt_start;
-//bool flag_dV_reduced = false;
-//int monitor_shift = 0;
-
-
-
-
+LockSystem MainLock(&myTimer, &DefaultPid, &Dac1, &Dac2, &LPF);//build Mainlock, type LockSystem
 
 LPF2 lpf2_1(lpf2_freq1);
 LPF2 lpf2_2(lpf2_freq2);
@@ -714,64 +702,25 @@ LPF2 lpf2_2(lpf2_freq2);
 
 
 
+
+
+
 void setup()
 {
-    
+
     MainLock.SetUp();
-    
+
 }
 
-//int engage = 0; //switch involved in tranfer between scan and feedback
-//
-
-//
 int print_index = 0;
-//bool maximum_reached = false;
-//float flag_monitor = 0;
-//bool scanning_done = true;   //if false, pid on after scanning
-//bool freeze = true;
-//int time_index = 0;
-//int state_flag = 0;
-//
-////freeze parameters
-//int pid_on_loops = 100000;    //2 sec 
-//int freeze_loops = 5000;    //1 sec
-//int freeze_multiplier = 20;  //30;
-//int cycle_index_freeze_extension = 30;
-//float I_drift = 0.15;    //pid I component for the drift
-//float C_end_sum = 0;
-//int index_loop = 0;   //index_loop * Tsample = time since the program started
-//int index_loop_cycle_start = 0;
-//float drift = 0;
-//int cycle_index = 0;
-//bool freeze_duration_increase_happened = false;
-//
-//bool DAC2_finished = false;
-//bool DAC1_finished = false;
-//float volt_out_DAC2 = 1;
-//float dvolt_DAC2 = 0.5;
-//long status;
-//double last_resonance_volt = 0;
-//float dvolt_DAC1 = 0.5;
-//double volt_out_DAC1 = -100;
-//int number_scans_DAC1 = 0;
-//float temp_volt = 0;
-//float temp_volt_d = 0.0005;
-//int temp_flag = 0;
-//int n = 0;
-//float voltoutacc = 0;
-//float t1 = 0;
-//int volt_out = 0;
 byte incomingByte = 122;
-
-
 
 void loop()
 {
     if (Serial.available())
     {
         incomingByte = Serial.read();  // will not be -1
-        //Serial.println(incomingByte);   //  l=108; s=115;  z=122
+        //Serial.println(incomingByte);   //  l=108; s=115;  z=122 https://www.rapidtables.com/code/text/ascii-table.html
         if (incomingByte == 80) // enter "P" in the serial port followed by a float value.
         {
             // try to read the P value from the serial
@@ -798,6 +747,24 @@ void loop()
             float phase = Serial.parseFloat();
             MainLock.SetErrorPhase(phase);
         }
+
+        if (incomingByte == 83) // enter "S" for setpoint
+        {
+            float setPoint = Serial.parseFloat();
+            DefaultPid.setSetpoint(setPoint);
+        }
+
+        if (incomingByte == 85)
+        {
+            float upper = Serial.parseFloat();
+            Dac1.SetVoltUpperLimit(upper);
+        }
+
+        if (incomingByte == 76)
+        {
+            float lower = Serial.parseFloat();
+            Dac1.SetVoltLowerLimit(lower);
+        }
     }
 
 
@@ -809,17 +776,17 @@ void loop()
         // not needed anymore. Because we have added the reset to lower limit to the setup code.
         //if (volt_out_DAC1 == -100)
         //    volt_out_DAC1 = volt_limit_down + 1; // going to rename volt_limit_down to voltLowerLimit
-        
+
         MainLock.MeasureReflectionAndCalculateError();
-         //TODO: make this into its own function inside the MainLock
+        //TODO: make this into its own function inside the MainLock
 
-        //error = 2 * Refl;//14000-27000  
-        //error = 2 * lpf2_1.main(Refl);//14000-27000  
+       //error = 2 * Refl;//14000-27000  
+       //error = 2 * lpf2_1.main(Refl);//14000-27000  
 
-        
 
-        MainLock.ExecuteVoltages(); 
-        
+
+        MainLock.ExecuteVoltages();
+
 
 
         ///////////////////////////////////////////////////////////////
@@ -834,13 +801,13 @@ void loop()
         {
             //Serial.println("scan");
             MainLock.OnScan();
-             //+ sinetable[0][r];
+            //+ sinetable[0][r];
             DefaultPid.resetSum();
         }
         ///////////////////////////////////////////////////////////////  
         if (incomingByte == 100)  //"d" for down, decreases DAC2 voltage
         {
-            MainLock.OnDecreaseOffset();            
+            MainLock.OnDecreaseOffset();
         }
         ///////////////////////////////////////////////////////////////  
         if (incomingByte == 117)  //"u" for up, increases DAC2 voltage
@@ -854,10 +821,10 @@ void loop()
         }
 
         print_index++;
-        if (print_index == 1000)
+        if (print_index == 100)
         {
             Serial.print("DAC1:");
-            Serial.print(Dac1.GetVoltOut() / 100);
+            Serial.print(Dac1.GetVoltOut());
             Serial.print(",");
             Serial.print("Reflection:");
             Serial.print(MainLock.GetReflection());
