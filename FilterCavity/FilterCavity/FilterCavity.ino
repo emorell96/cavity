@@ -418,6 +418,117 @@ public:
     }
 };
 
+class SlopeTracker {
+private:
+    long y1 = 0;
+    long y2 = 0;
+
+    int biningCount = 3;
+    int count = 0;
+    bool firstPoint = true;
+
+    bool ready = false;
+
+public:
+    /// <summary>
+    /// Adds a point to the slope tracker. This assumes that you call this in the same time interval of unit 1.
+    /// </summary>
+    /// <param name="y">The point height</param>
+    /// <returns></returns>
+    void AddPoint(long y) {
+        if (count > biningCount) {
+            firstPoint = !firstPoint;
+            count = 0;
+            ready = true;
+                            
+        }
+        else {
+            ready = false;
+        }
+
+        if (firstPoint) {
+            y1 += y;
+        }
+        else {
+            y2 += y;
+        }
+
+        count++;
+    }
+
+    bool IsReady() {
+        return ready;
+    }
+
+    bool IsSlopeRising() 
+    {
+        return (y2 - y1) / biningCount > 0;
+    }
+
+};
+
+class PdhSignal {
+private:
+
+    // tries to keep track of maxima found for the pdh signal.
+    float maxErrorVolt = 0;
+    long maxErrorValue = -1;
+
+    float minErrorVolt = 0;
+    long minErrorValue = -1;
+
+    bool resonanceFound = false;
+
+    SlopeTracker slopeTracker;
+public:
+    void TrackErrorMaxima(float error, Dac& dac) {
+        if (error > maxErrorValue || maxErrorValue == -1) {
+            maxErrorValue = error;
+            maxErrorVolt = dac.GetVoltOut();
+        }
+    }
+
+    void TrackErrorMinima(float error, Dac& dac) {
+        if (error < minErrorValue || minErrorValue == -1) {
+            minErrorValue = error;
+            minErrorVolt = dac.GetVoltOut();
+        }
+    }
+
+
+
+
+#pragma region Getters
+    float GetMaxError() {
+        return maxErrorValue;
+    }
+
+    float GetMinError() {
+        return minErrorValue;
+    }
+
+    long GetMaxErrorVoltage() {
+        return maxErrorVolt;
+    }
+
+    long GetMinErrorVoltage() {
+        return minErrorVolt;
+    }
+
+    bool IsResonanceFound() {
+        return resonanceFound;
+    }
+
+    long GetResonanceVoltage() {
+        return (maxErrorVolt - minErrorVolt) / 2;
+    }
+#pragma endregion
+
+
+
+
+};
+
 class LockSystem {
 private://can only be changed in class
     int reflection;
@@ -439,14 +550,11 @@ private://can only be changed in class
     bool scanningDone = false;
     bool stateFlag = false;
 
+    PdhSignal PdhSignal;
+
     IntervalTimer* intervalTimer;
 
-    // tries to keep track of maxima found for the pdh signal.
-    float maxErrorVolt = 0;
-    long maxErrorValue = 0;
-
-    float minErrorVolt = 0;
-    long minErrorValue = 0;
+    
 
 
     Dac* dac1;
@@ -467,20 +575,7 @@ private://can only be changed in class
     float CalculateAcBits() {
         return max_bits * sinAmplitude / 5; // why divided by 5?
     }
-
-    void TrackErrorMaxima(float error) {
-        if (error > maxErrorValue) {
-            maxErrorValue = error;
-            maxErrorVolt = dac1->GetVoltOut();
-        }
-    }
-
-    void TrackErrorMinima(float error) {
-        if (error < minErrorValue) {
-            minErrorValue = error;
-            minErrorVolt = dac1->GetVoltOut();
-        }
-    }
+        
 
     void GenerateSinetable() {
         GenerateSinetable(sinAmplitude);
@@ -531,6 +626,7 @@ private://can only be changed in class
         Serial.println("initialized");
         delay(1000);
     }
+    
 public:
     LockSystem(IntervalTimer* intervalTimer, PID* defaultPid, Dac* dac1, Dac* dac2, FilterBuLp2* lpf);
 
@@ -645,20 +741,25 @@ public:
 
             dac1->Scan(sinetable[0][sineTableIndex]);
 
+            float error = GetError();
+            PdhSignal.TrackErrorMaxima(error, *dac1);
+            PdhSignal.TrackErrorMinima(error, *dac2);
 
 
             //////////////////once the resonace found, scan a small range/////////////////
             //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
-            if (GetError() > 130000)
+            if (PdhSignal.IsResonanceFound())
             {
                 Serial.println("resonance found");
                 dac1->SetIsFinished(true);
                 //dvolt_DAC1 = dvolt_DAC1 / 8.0;
-                lastResonanceVolt = dac1->GetVoltOut();
+                lastResonanceVolt = PdhSignal.GetResonanceVoltage();
+                    //dac1->GetVoltOut();
             }
         }
     }
 };
+
 
 LockSystem::LockSystem(IntervalTimer* intervalTimer, PID* defaultPid, Dac* dac1, Dac* dac2, FilterBuLp2* lpf) {
     this->intervalTimer = intervalTimer;

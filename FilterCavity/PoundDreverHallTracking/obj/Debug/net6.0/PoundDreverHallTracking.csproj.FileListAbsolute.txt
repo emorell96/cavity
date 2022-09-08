@@ -1,0 +1,17 @@
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\bin\Debug\net6.0\PoundDreverHallTracking.exe
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\bin\Debug\net6.0\PoundDreverHallTracking.deps.json
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\bin\Debug\net6.0\PoundDreverHallTracking.runtimeconfig.json
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\bin\Debug\net6.0\PoundDreverHallTracking.dll
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\bin\Debug\net6.0\PoundDreverHallTracking.pdb
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\bin\Debug\net6.0\MathNet.Numerics.dll
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.csproj.AssemblyReference.cache
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.AssemblyInfoInputs.cache
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.AssemblyInfo.cs
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.csproj.CoreCompileInputs.cache
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.csproj.CopyComplete
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.dll
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\refint\PoundDreverHallTracking.dll
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.pdb
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\PoundDreverHallTracking.genruntimeconfig.cache
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\PoundDreverHallTracking\obj\Debug\net6.0\ref\PoundDreverHallTracking.dll
