@@ -666,6 +666,8 @@ public:
 
     long count = 0;
     int pass = 0;
+    bool firstPass = true;
+
     void OnLock() {
         if (dac1->IsFinished()) {
             if (!engage) {
@@ -696,7 +698,7 @@ public:
             dac1->SendVoltageToRegister();
         }
         else {
-            if (dac1->IsScanFinished()) {
+            if (dac1->IsScanFinished() && !firstPass) {
                 pass++;
                 // limit the scan range
                 dac1->SetVoltUpperLimit(PdhSignalTracker.Maxima.GetZ());
@@ -707,6 +709,11 @@ public:
                 count = 0;
             }
             else {
+
+                if (firstPass) {
+                    firstPass = false;
+                }
+
                 dac1->Scan(sinetable[0][sineTableIndex]);
 
                 float error = GetError();
