@@ -376,7 +376,10 @@ public:
         SetVoltOut(voltOut + dvoltOut + offsetScan);
         isFinished = false;
         if (dvoltOut < 0) {
-            scanFinished = !scanFinished;
+            scanFinished = true;
+        }
+        else {
+            scanFinished = false;
         }
     }
 
