@@ -714,6 +714,16 @@ public:
                 Serial.println(pdhSignalTracker.Minima.GetZ());
                 Serial.println(pdhSignalTracker.Minima.GetY());
                 Serial.println(pdhSignalTracker.Maxima.GetY());
+
+                if (pdhSignalTracker.Maxima.GetZ() > pdhSignalTracker.Minima.GetZ()) {
+                    dac1->SetVoltUpperLimit(pdhSignalTracker.Maxima.GetZ());
+                    dac1->SetVoltLowerLimit(pdhSignalTracker.Minima.GetZ());
+                }
+                else {
+                    dac1->SetVoltUpperLimit(pdhSignalTracker.Minima.GetZ());
+                    dac1->SetVoltLowerLimit(pdhSignalTracker.Maxima.GetZ());
+                }
+
                 dac1->SetIsScanFinished(false);
                 pdhSignalTracker.Clear();
                 pdhSignalTracker.SetPass(pass);
@@ -735,7 +745,7 @@ public:
 
                 //////////////////once the resonace found, scan a small range/////////////////
                 //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
-                if (pdhSignalTracker.GetPassNumber() > 2)
+                if (pdhSignalTracker.GetPassNumber() > 15)
                 {
                     Serial.println("resonance found");
                     dac1->SetIsFinished(true);
