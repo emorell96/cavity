@@ -371,16 +371,14 @@ public:
 
     void Scan(int offsetScan = 0) {
         float newVoltage = voltOut + dvoltOut + offsetScan;
-        if (newVoltage > voltUpperLimit || newVoltage < voltLowerLimit)
+        if (newVoltage > voltUpperLimit || newVoltage < voltLowerLimit) 
+        {
             dvoltOut = -dvoltOut;
-        SetVoltOut(voltOut + dvoltOut + offsetScan);
-        isFinished = false;
-        if (dvoltOut < 0) {
             scanFinished = true;
         }
-        else {
-            scanFinished = false;
-        }
+            
+        SetVoltOut(voltOut + dvoltOut + offsetScan);
+        isFinished = false;
     }
 
 
