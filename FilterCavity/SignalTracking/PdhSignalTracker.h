@@ -9,7 +9,7 @@ public:
 
 	Point Maxima = Point(0, 0);
 	Point Minima = Point(0, 0);
-	void AddPoint(Point& point);
+	void AddPoint(Point point);
 	void Clear();
 	void SetPass(int passnumber);
 	
@@ -31,7 +31,7 @@ PdhSignalTracker::~PdhSignalTracker()
 {
 }
 
-void PdhSignalTracker::AddPoint(Point& point)
+void PdhSignalTracker::AddPoint(Point point)
 {
 	if (firstTime) {
 		Maxima = point;

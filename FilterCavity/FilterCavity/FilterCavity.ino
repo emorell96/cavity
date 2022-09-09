@@ -503,7 +503,7 @@ private://can only be changed in class
     bool scanningDone = false;
     bool stateFlag = false;
 
-    PdhSignalTracker PdhSignalTracker;
+    PdhSignalTracker pdhSignalTracker;
 
     IntervalTimer* intervalTimer;
 
@@ -701,11 +701,11 @@ public:
             if (dac1->IsScanFinished() && !firstPass) {
                 pass++;
                 // limit the scan range
-                dac1->SetVoltUpperLimit(PdhSignalTracker.Maxima.GetZ());
-                dac1->SetVoltLowerLimit(PdhSignalTracker.Minima.GetZ());
+                dac1->SetVoltUpperLimit(pdhSignalTracker.Maxima.GetZ());
+                dac1->SetVoltLowerLimit(pdhSignalTracker.Minima.GetZ());
                 dac1->Zero();
-                PdhSignalTracker.Clear();
-                PdhSignalTracker.SetPass(pass);
+                pdhSignalTracker.Clear();
+                pdhSignalTracker.SetPass(pass);
                 count = 0;
             }
             else {
@@ -718,18 +718,18 @@ public:
 
                 float error = GetError();
 
-                PdhSignalTracker.AddPoint(Point(count, error, dac1->GetVoltOut()));
+                pdhSignalTracker.AddPoint(Point(count, error, dac1->GetVoltOut()));
                 count++;
 
 
                 //////////////////once the resonace found, scan a small range/////////////////
                 //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
-                if (PdhSignalTracker.GetPassNumber() > 2)
+                if (pdhSignalTracker.GetPassNumber() > 2)
                 {
                     Serial.println("resonance found");
                     dac1->SetIsFinished(true);
                     //dvolt_DAC1 = dvolt_DAC1 / 8.0;
-                    lastResonanceVolt = PdhSignalTracker.GetSetPoint();
+                    lastResonanceVolt = pdhSignalTracker.GetSetPoint();
                     //dac1->GetVoltOut();
                 }
             }
