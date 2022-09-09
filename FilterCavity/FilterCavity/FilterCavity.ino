@@ -726,9 +726,11 @@ public:
 
                 MeasureReflectionAndCalculateError();
                 float error = GetError();
-
-                pdhSignalTracker.AddPoint(Point(count, error, dac1->GetVoltOut()));
-                count++;
+                if (error != 0) {
+                    pdhSignalTracker.AddPoint(Point(count, error, dac1->GetVoltOut()));
+                    count++;
+                }
+                
 
 
                 //////////////////once the resonace found, scan a small range/////////////////
