@@ -9,6 +9,6 @@ namespace PoundDreverHallTracking.Generators
 {
     public interface ITraceGenerator
     {
-        public List<Point> GenerateTrace();
+        public Trace GenerateTrace();
     }
 }

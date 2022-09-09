@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GtaTestDurations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Executable>C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\Debug\CppPoundDreverHallTests.exe</Executable>
+  <TestDurations>
+    <TestDuration Test="TestPdhSignalTracking.FindsMinimaAndMaxima" Duration="2" />
+    <TestDuration Test="TestCaseName.TestName" Duration="1" />
+  </TestDurations>
+</GtaTestDurations>

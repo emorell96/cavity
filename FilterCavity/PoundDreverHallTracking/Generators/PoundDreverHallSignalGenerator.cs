@@ -22,6 +22,8 @@ namespace PoundDreverHallTracking.Generators
         public double Reflection { get; set; }
         public double ModulationFrequency { get; set; }
 
+        public bool Invert { get; set; } = false;
+
 
         public Complex CalculateTransferValue(double omega, double time = 0)
         {
@@ -35,10 +37,15 @@ namespace PoundDreverHallTracking.Generators
 
         public double CalculateError(double omega)
         {
-            return 2 * Math.Sqrt(PowerCarrier * PowerSideband) * (CalculateTransferValue(omega) * Complex.Conjugate(CalculateTransferValue(omega + ModulationFrequency)) - Complex.Conjugate(CalculateTransferValue(omega)) * CalculateTransferValue(omega - ModulationFrequency)).Imaginary;
+            var value = 2 * Math.Sqrt(PowerCarrier * PowerSideband) * (CalculateTransferValue(omega) * Complex.Conjugate(CalculateTransferValue(omega + ModulationFrequency)) - Complex.Conjugate(CalculateTransferValue(omega)) * CalculateTransferValue(omega - ModulationFrequency)).Imaginary; 
+            if (Invert)
+            {
+                return -1 * value;
+            }
+            return value;
         }
 
-        public List<Point> GenerateTrace()
+        public Trace GenerateTrace()
         {
             var output = new List<Point>();
             var range = Generate.LinearSpaced(Steps, StartX, EndX);
@@ -46,7 +53,8 @@ namespace PoundDreverHallTracking.Generators
             {
                 output.Add(new Point(value, CalculateError(value)));
             }
-            return output;
+            var ordered = output.OrderBy(x => x.Y);
+            return new Trace(ordered.Last(), ordered.First(), output);
         }
     }
 }

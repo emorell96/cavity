@@ -1,0 +1,79 @@
+﻿  PdhSignalTracker.cpp
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\PdhSignalTracker.cpp : warning C4117: macro name '__cplusplus' is reserved, '#define' ignored
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(26,1): warning C4117: macro name '__cplusplus' is reserved, '#define' ignored
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(27,1): warning C4117: macro name '__cplusplus' is reserved, '#undef' ignored
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(28,1): warning C4117: macro name '__cplusplus' is reserved, '#define' ignored
+C:\Program Files (x86)\Arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\5.4.1\include\stddef.h(216,23): error C2371: 'size_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\predefined C++ types (compiler internal)(16): message : see declaration of 'size_t'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(35,21): error C2371: '__int8_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(69): message : see declaration of '__int8_t'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(36,23): error C2371: '__uint8_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(68): message : see declaration of '__uint8_t'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(63,9): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(67,18): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(89,9): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(93,18): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(200,9): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(204,18): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\sys\_stdint.h(36,20): error C2371: 'uint16_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(77): message : see declaration of 'uint16_t'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(436,124): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9942,6): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9943,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9948,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9949,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9981,6): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9982,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9987,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9988,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10002,6): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10003,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10008,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10009,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(1798,6): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2049,6): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2183,6): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2380,13): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2400,13): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\type_traits(32,9): warning C4068: unknown pragma 'GCC'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\bits\c++0x_warning.h(34,1): fatal  error C1189: #error:  This file requires compiler and library support for the ISO C++ 2011 standard. This support must be enabled with the -std=c++11 or -std=gnu++11 compiler options.
+  Point.cpp
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\Point.cpp : warning C4117: macro name '__cplusplus' is reserved, '#define' ignored
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(26,1): warning C4117: macro name '__cplusplus' is reserved, '#define' ignored
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(27,1): warning C4117: macro name '__cplusplus' is reserved, '#undef' ignored
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(28,1): warning C4117: macro name '__cplusplus' is reserved, '#define' ignored
+C:\Program Files (x86)\Arduino\hardware\tools\arm\lib\gcc\arm-none-eabi\5.4.1\include\stddef.h(216,23): error C2371: 'size_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\predefined C++ types (compiler internal)(16): message : see declaration of 'size_t'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(35,21): error C2371: '__int8_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(69): message : see declaration of '__int8_t'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(36,23): error C2371: '__uint8_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(68): message : see declaration of '__uint8_t'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(63,9): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(67,18): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(89,9): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(93,18): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(200,9): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\machine\_default_types.h(204,18): error C2059: syntax error: 'constant'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\sys\_stdint.h(36,20): error C2371: 'uint16_t': redefinition; different basic types
+C:\Users\emore\Documents\Bouwmeester Lab\Arduino\cavity\FilterCavity\FilterCavity\__vm\.FilterCavity.vsarduino.h(77): message : see declaration of 'uint16_t'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(436,124): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9942,6): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9943,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9948,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9949,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9981,6): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9982,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9987,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(9988,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10002,6): error C2059: syntax error: 'volatile'
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10003,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10008,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\imxrt.h(10009,11): error C2290: C++ 'asm' syntax ignored. Use __asm.
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(1798,6): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2049,6): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2183,6): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2380,13): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy4\core_pins.h(2400,13): error C3861: '__builtin_constant_p': identifier not found
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\type_traits(32,9): warning C4068: unknown pragma 'GCC'
+C:\Program Files (x86)\Arduino\hardware\tools\arm\arm-none-eabi\include\c++\5.4.1\bits\c++0x_warning.h(34,1): fatal  error C1189: #error:  This file requires compiler and library support for the ISO C++ 2011 standard. This support must be enabled with the -std=c++11 or -std=gnu++11 compiler options.
+  Generating Code...

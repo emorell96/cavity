@@ -1,3 +1,6 @@
+#include <PdhSignalTracker.h>
+#include <Point.h>
+
 #include <SPI.h>
 #include <string.h>
 #include <math.h>
@@ -224,6 +227,7 @@ private:
     long offset = 10;
 
     bool isFinished = false;
+    bool scanFinished = false;
 
 public:
     Dac(int resetPin, int clearPin, int ldacPin, int syncPin) {
@@ -231,6 +235,10 @@ public:
         this->clr = clearPin;
         this->ldac = ldacPin;
         this->sync = syncPin;
+    }
+
+    bool IsScanFinished() {
+        return scanFinished;
     }
 
     void SetVoltLowerLimit(double voltLowerLimit) {
@@ -326,6 +334,7 @@ public:
             SetVoltOut(voltOut + dvoltOut);
         }
         isFinished = false;
+        scanFinished = false;
     }
 
     void ResetOffset() {
@@ -366,6 +375,9 @@ public:
             dvoltOut = -dvoltOut;
         SetVoltOut(voltOut + dvoltOut + offsetScan);
         isFinished = false;
+        if (dvoltOut < 0) {
+            scanFinished = !scanFinished;
+        }
     }
 
 
@@ -467,68 +479,6 @@ public:
 
 };
 
-class PdhSignal {
-private:
-
-    // tries to keep track of maxima found for the pdh signal.
-    float maxErrorVolt = 0;
-    long maxErrorValue = -1;
-
-    float minErrorVolt = 0;
-    long minErrorValue = -1;
-
-    bool resonanceFound = false;
-
-    SlopeTracker slopeTracker;
-public:
-    void TrackErrorMaxima(float error, Dac& dac) {
-        if (error > maxErrorValue || maxErrorValue == -1) {
-            maxErrorValue = error;
-            maxErrorVolt = dac.GetVoltOut();
-        }
-    }
-
-    void TrackErrorMinima(float error, Dac& dac) {
-        if (error < minErrorValue || minErrorValue == -1) {
-            minErrorValue = error;
-            minErrorVolt = dac.GetVoltOut();
-        }
-    }
-
-
-
-
-#pragma region Getters
-    float GetMaxError() {
-        return maxErrorValue;
-    }
-
-    float GetMinError() {
-        return minErrorValue;
-    }
-
-    long GetMaxErrorVoltage() {
-        return maxErrorVolt;
-    }
-
-    long GetMinErrorVoltage() {
-        return minErrorVolt;
-    }
-
-    bool IsResonanceFound() {
-        return resonanceFound;
-    }
-
-    long GetResonanceVoltage() {
-        return (maxErrorVolt - minErrorVolt) / 2;
-    }
-#pragma endregion
-
-
-
-
-};
-
 class LockSystem {
 private://can only be changed in class
     int reflection;
@@ -550,7 +500,7 @@ private://can only be changed in class
     bool scanningDone = false;
     bool stateFlag = false;
 
-    PdhSignal PdhSignal;
+    PdhSignalTracker PdhSignalTracker;
 
     IntervalTimer* intervalTimer;
 
@@ -711,9 +661,14 @@ public:
     }
 
 
-
+    long count = 0;
+    int pass = 0;
     void OnLock() {
         if (dac1->IsFinished()) {
+            if (!engage) {
+                defaultPid->setSetpoint(lastResonanceVolt);
+            }
+
             engage = true;
             scanningDone = true;
             if (engage == 1)   //feedback on
@@ -734,28 +689,41 @@ public:
                 }
             }
 
-            dac1->SetVoltOut(lastResonanceVolt + correction + sinetable[0][sineTableIndex]);
+            dac1->SetVoltOut(correction + sinetable[0][sineTableIndex]);
             dac1->SendVoltageToRegister();
         }
         else {
-
-            dac1->Scan(sinetable[0][sineTableIndex]);
-
-            float error = GetError();
-            PdhSignal.TrackErrorMaxima(error, *dac1);
-            PdhSignal.TrackErrorMinima(error, *dac2);
-
-
-            //////////////////once the resonace found, scan a small range/////////////////
-            //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
-            if (PdhSignal.IsResonanceFound())
-            {
-                Serial.println("resonance found");
-                dac1->SetIsFinished(true);
-                //dvolt_DAC1 = dvolt_DAC1 / 8.0;
-                lastResonanceVolt = PdhSignal.GetResonanceVoltage();
-                    //dac1->GetVoltOut();
+            if (dac1->IsScanFinished()) {
+                pass++;
+                // limit the scan range
+                dac1->SetVoltUpperLimit(PdhSignalTracker.Maxima.GetZ());
+                dac1->SetVoltLowerLimit(PdhSignalTracker.Minima.GetZ());
+                dac1->Zero();
+                PdhSignalTracker.Clear();
+                PdhSignalTracker.SetPass(pass);
+                count = 0;
             }
+            else {
+                dac1->Scan(sinetable[0][sineTableIndex]);
+
+                float error = GetError();
+
+                PdhSignalTracker.AddPoint(Point(count, error, dac1->GetVoltOut()));
+                count++;
+
+
+                //////////////////once the resonace found, scan a small range/////////////////
+                //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
+                if (PdhSignalTracker.GetPassNumber() > 2)
+                {
+                    Serial.println("resonance found");
+                    dac1->SetIsFinished(true);
+                    //dvolt_DAC1 = dvolt_DAC1 / 8.0;
+                    lastResonanceVolt = PdhSignalTracker.GetSetPoint();
+                    //dac1->GetVoltOut();
+                }
+            }
+            
         }
     }
 };
