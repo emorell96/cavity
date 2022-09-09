@@ -374,6 +374,7 @@ public:
         if (newVoltage > voltUpperLimit || newVoltage < voltLowerLimit) 
         {
             dvoltOut = -dvoltOut;
+            SetIsScanFinished(true);
         }
             
         SetVoltOut(voltOut + dvoltOut + offsetScan);
@@ -390,7 +391,7 @@ public:
     }
 
     void SetIsScanFinished(bool isScanFinished) {
-        scanFinished = IsScanFinished;
+        scanFinished = isScanFinished;
     }
 
     int AD5791_SetRegisterValue(unsigned char registerAddress, unsigned long registerValue) {
@@ -708,7 +709,7 @@ public:
                 // limit the scan range
                 dac1->SetVoltUpperLimit(pdhSignalTracker.Maxima.GetZ());
                 dac1->SetVoltLowerLimit(pdhSignalTracker.Minima.GetZ());
-                dac1->Zero();
+                dac1->SetIsScanFinished(false);
                 pdhSignalTracker.Clear();
                 pdhSignalTracker.SetPass(pass);
                 count = 0;
