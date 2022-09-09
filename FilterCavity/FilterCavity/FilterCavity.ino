@@ -707,8 +707,10 @@ public:
             if (dac1->IsScanFinished()) {
                 pass++;
                 // limit the scan range
-                dac1->SetVoltUpperLimit(pdhSignalTracker.Maxima.GetZ());
-                dac1->SetVoltLowerLimit(pdhSignalTracker.Minima.GetZ());
+                Serial.println(pdhSignalTracker.Maxima.GetZ());
+                Serial.println(pdhSignalTracker.Minima.GetZ());
+                Serial.println(pdhSignalTracker.Minima.GetY());
+                Serial.println(pdhSignalTracker.Maxima.GetY());
                 dac1->SetIsScanFinished(false);
                 pdhSignalTracker.Clear();
                 pdhSignalTracker.SetPass(pass);
