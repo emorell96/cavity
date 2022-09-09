@@ -652,6 +652,8 @@ public:
     }
 
     void OnScan() {
+        firstPass = true;
+        dac1->SetIsScanFinished(false);
         dac1->Scan();
     }
 
@@ -722,6 +724,7 @@ public:
 
                 dac1->Scan(sinetable[0][sineTableIndex]);
 
+                MeasureReflectionAndCalculateError();
                 float error = GetError();
 
                 pdhSignalTracker.AddPoint(Point(count, error, dac1->GetVoltOut()));
