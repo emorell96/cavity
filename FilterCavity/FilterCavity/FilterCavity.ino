@@ -374,7 +374,6 @@ public:
         if (newVoltage > voltUpperLimit || newVoltage < voltLowerLimit) 
         {
             dvoltOut = -dvoltOut;
-            scanFinished = true;
         }
             
         SetVoltOut(voltOut + dvoltOut + offsetScan);
@@ -390,6 +389,9 @@ public:
         isFinished = finished;
     }
 
+    void SetIsScanFinished(bool isScanFinished) {
+        scanFinished = IsScanFinished;
+    }
 
     int AD5791_SetRegisterValue(unsigned char registerAddress, unsigned long registerValue) {
         unsigned char writeCommand[3] = { 0, 0, 0 };
@@ -696,7 +698,12 @@ public:
             dac1->SendVoltageToRegister();
         }
         else {
-            if (dac1->IsScanFinished() && !firstPass) {
+            if (firstPass) {
+                dac1->SetIsScanFinished(false);
+                firstPass = false;
+            }
+
+            if (dac1->IsScanFinished()) {
                 pass++;
                 // limit the scan range
                 dac1->SetVoltUpperLimit(pdhSignalTracker.Maxima.GetZ());
@@ -708,9 +715,6 @@ public:
             }
             else {
 
-                if (firstPass) {
-                    firstPass = false;
-                }
 
                 dac1->Scan(sinetable[0][sineTableIndex]);
 
@@ -722,7 +726,7 @@ public:
 
                 //////////////////once the resonace found, scan a small range/////////////////
                 //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
-                if (pdhSignalTracker.GetPassNumber() > 2)
+                if (pdhSignalTracker.GetPassNumber() > 1)
                 {
                     Serial.println("resonance found");
                     dac1->SetIsFinished(true);
