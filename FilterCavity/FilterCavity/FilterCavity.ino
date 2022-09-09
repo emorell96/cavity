@@ -706,6 +706,7 @@ public:
 
             if (dac1->IsScanFinished()) {
                 pass++;
+                Serial.println("scan done");
                 // limit the scan range
                 Serial.println(pdhSignalTracker.Maxima.GetZ());
                 Serial.println(pdhSignalTracker.Minima.GetZ());
@@ -729,7 +730,7 @@ public:
 
                 //////////////////once the resonace found, scan a small range/////////////////
                 //if (GetReflection() < 5000)  //last_resonance_volt initialized 0
-                if (pdhSignalTracker.GetPassNumber() > 1)
+                if (pdhSignalTracker.GetPassNumber() > 2)
                 {
                     Serial.println("resonance found");
                     dac1->SetIsFinished(true);
